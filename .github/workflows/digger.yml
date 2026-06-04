@@ -1,0 +1,41 @@
+name: Digger IaC
+
+on:
+  pull_request:
+    branches: [main]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  id-token: write # necessário para OIDC com AWS
+  pull-requests: write
+  issues: read
+  statuses: read
+
+jobs:
+  digger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Autentica na AWS via OIDC (sem chave de acesso armazenada)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Run Digger
+        uses: diggerhq/digger@v0.6.0
+        with:
+          setup-terraform: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
