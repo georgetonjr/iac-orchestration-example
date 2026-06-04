@@ -36,6 +36,6 @@ jobs:
         uses: diggerhq/digger@v0.6.0
         with:
           setup-terraform: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
