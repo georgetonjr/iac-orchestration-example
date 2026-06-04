@@ -27,6 +27,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Run Digger
+        id: digger
         uses: diggerhq/digger@v0.6.0
         with:
           setup-terraform: true
@@ -37,3 +38,61 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_CONTEXT: ${{ toJson(github) }}
+
+      - name: Post plan instructions
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const marker = '<!-- digger-instructions -->';
+            const status = '${{ steps.digger.outcome }}' === 'success' ? '✅' : '❌';
+            const statusLabel = '${{ steps.digger.outcome }}' === 'success'
+              ? 'Plan executado com sucesso'
+              : 'Plan falhou — veja os detalhes acima';
+
+            const body = [
+              marker,
+              `## ${status} Terraform Plan — ${statusLabel}`,
+              '',
+              '> Revise o plan do Digger acima antes de aplicar.',
+              '',
+              '---',
+              '',
+              '### Como aplicar',
+              '',
+              '**Opção 1 — via comentário nesta PR:**',
+              '```',
+              'digger apply',
+              '```',
+              '',
+              '**Opção 2 — via merge:**',
+              'Faça o merge desta PR no `main` e o apply será executado automaticamente.',
+              '',
+              '---',
+              `_Atualizado em: ${new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC_`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.startsWith(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body,
+              });
+            }
