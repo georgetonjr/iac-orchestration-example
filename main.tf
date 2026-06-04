@@ -19,6 +19,10 @@ variable "env" {
   default = "dev"
 }
 
+variable "project" {
+  default = "iac-orchestration-example"
+}
+
 # Recurso de demo: bucket S3
 resource "aws_s3_bucket" "demo" {
   bucket = "demo-digger-iac-${var.env}-${random_id.suffix.hex}"
