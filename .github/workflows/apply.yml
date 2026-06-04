@@ -1,0 +1,29 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Número da PR para aplicar'
+        required: true
+        type: string
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  trigger-apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post digger apply comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: parseInt('${{ inputs.pr_number }}'),
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'digger apply',
+            });

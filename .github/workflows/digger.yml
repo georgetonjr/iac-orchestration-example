@@ -46,9 +46,13 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const marker = '<!-- digger-instructions -->';
-            const status = '${{ steps.digger.outcome }}' === 'success' ? '✅' : '❌';
-            const statusLabel = '${{ steps.digger.outcome }}' === 'success'
-              ? 'Plan executado com sucesso'
+            const pr = context.issue.number;
+            const repo = context.repo.owner + '/' + context.repo.repo;
+            const applyUrl = `https://github.com/${repo}/actions/workflows/apply.yml`;
+            const success = '${{ steps.digger.outcome }}' === 'success';
+            const status = success ? '✅' : '❌';
+            const statusLabel = success
+              ? 'Plan executado com sucesso — pronto para apply'
               : 'Plan falhou — veja os detalhes acima';
 
             const body = [
@@ -59,24 +63,28 @@ jobs:
               '',
               '---',
               '',
-              '### Como aplicar',
+              '### Aplicar mudanças',
               '',
-              '**Opção 1 — via comentário nesta PR:**',
+              success
+                ? `**[▶ Aplicar via GitHub Actions](${applyUrl})**`
+                : '',
+              success
+                ? `> Clique no link acima → **Run workflow** → informe o número desta PR: \`${pr}\``
+                : '',
+              '',
+              '**Ou** comente diretamente nesta PR:',
               '```',
               'digger apply',
               '```',
               '',
-              '**Opção 2 — via merge:**',
-              'Faça o merge desta PR no `main` e o apply será executado automaticamente.',
-              '',
               '---',
               `_Atualizado em: ${new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC_`,
-            ].join('\n');
+            ].filter(l => l !== undefined).join('\n');
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              issue_number: pr,
             });
 
             const existing = comments.find(c => c.body.startsWith(marker));
@@ -90,7 +98,7 @@ jobs:
               });
             } else {
               await github.rest.issues.createComment({
-                issue_number: context.issue.number,
+                issue_number: pr,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body,
