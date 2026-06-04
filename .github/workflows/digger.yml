@@ -72,11 +72,6 @@ jobs:
                 ? `> Clique no link acima → **Run workflow** → informe o número desta PR: \`${pr}\``
                 : '',
               '',
-              '**Ou** comente diretamente nesta PR:',
-              '```',
-              'digger apply',
-              '```',
-              '',
               '---',
               `_Atualizado em: ${new Date().toISOString().replace('T', ' ').slice(0, 19)} UTC_`,
             ].filter(l => l !== undefined).join('\n');
