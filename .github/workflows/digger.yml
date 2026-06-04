@@ -33,6 +33,7 @@ jobs:
           terraform-version: "1.7.0"
           no-backend: "true"
           configure-checkout: false
+          disable-locking: "true"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_CONTEXT: ${{ toJson(github) }}
