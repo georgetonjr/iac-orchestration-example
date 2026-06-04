@@ -46,10 +46,24 @@ resource "aws_s3_bucket_versioning" "demo" {
   }
 }
 
+resource "aws_sns_topic" "notifications" {
+  name = "${var.project}-${var.env}-notifications"
+
+  tags = {
+    Name        = "Notifications"
+    Environment = var.env
+    ManagedBy   = "Terraform"
+  }
+}
+
 output "bucket_name" {
   value = aws_s3_bucket.demo.bucket
 }
 
 output "bucket_arn" {
   value = aws_s3_bucket.demo.arn
+}
+
+output "sns_topic_arn" {
+  value = aws_sns_topic.notifications.arn
 }
