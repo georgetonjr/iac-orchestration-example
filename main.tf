@@ -46,6 +46,18 @@ resource "aws_s3_bucket_versioning" "demo" {
   }
 }
 
+resource "aws_sqs_queue" "jobs" {
+  name                       = "${var.project}-${var.env}-jobs"
+  message_retention_seconds  = 86400
+  visibility_timeout_seconds = 30
+
+  tags = {
+    Name        = "Jobs Queue"
+    Environment = var.env
+    ManagedBy   = "Terraform"
+  }
+}
+
 resource "aws_sns_topic" "notifications" {
   name = "${var.project}-${var.env}-notifications"
 
@@ -62,6 +74,10 @@ output "bucket_name" {
 
 output "bucket_arn" {
   value = aws_s3_bucket.demo.arn
+}
+
+output "jobs_queue_url" {
+  value = aws_sqs_queue.jobs.url
 }
 
 output "sns_topic_arn" {
